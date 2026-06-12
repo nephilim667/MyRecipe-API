@@ -7,11 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="CommandInputs\" />
-    <Folder Include="CommandOutputs\" />
+    <Folder Include="Inputs\Commands\" />
+    <Folder Include="Outputs\Commands\" />
     <Folder Include="UseCases\Authentication\Commands\Validators\" />
-    <Folder Include="UseCases\Authentication\Errors\" />
-    <Folder Include="UseCases\Authentication\Queries\Validators\" />
   </ItemGroup>
 
   <ItemGroup>

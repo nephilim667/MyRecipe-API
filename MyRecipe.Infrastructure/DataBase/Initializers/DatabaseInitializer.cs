@@ -1,7 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 using MyRecipe.Infrastructure.DataBase.Contexts;
 using MyRecipe.Infrastructure.DataBase.Entities;
+using MyRecipe.Infrastructure.DataBase.Constants;
 
 namespace MyRecipe.Infrastructure.DataBase.Initializers
 {
@@ -9,9 +11,29 @@ namespace MyRecipe.Infrastructure.DataBase.Initializers
     {
         internal static async Task SeedSystemEssentialsAsync(AppDbContext context)
         {
-            // Put core lookups here that your system CANNOT boot without (e.g., Default System Roles)
-            // For now, we'll leave this ready for your future global lookup tables.
-            await Task.CompletedTask;
+            // Check if roles already exist
+            if (!await EntityFrameworkQueryableExtensions.AnyAsync(context.Roles))
+            {
+                var adminRoleId = Guid.NewGuid();
+                var userRoleId = Guid.NewGuid();
+
+                await context.Roles.AddRangeAsync(
+                    new IdentityRole<Guid>
+                    {
+                        Id = adminRoleId,
+                        Name = AppRoles.Administrator,
+                        NormalizedName = AppRoles.Administrator.ToUpper()
+                    },
+                    new IdentityRole<Guid>
+                    {
+                        Id = userRoleId,
+                        Name = AppRoles.User,
+                        NormalizedName = AppRoles.User.ToUpper()
+                    }
+                );
+
+                await context.SaveChangesAsync();
+            }
         }
 
         internal static async Task SeedInMemoryMockDataAsync(AppDbContext context)
@@ -19,7 +41,7 @@ namespace MyRecipe.Infrastructure.DataBase.Initializers
             // If mock data is already there, don't double-seed
             if (await context.Users.AnyAsync(user => user.UserName == "sandbox_chef")) return;
 
-            // Seed a specific Mock Sandbox User
+            // 1. Create the mock admin user
             var mockUser = new UserEntity
             {
                 Id = Guid.NewGuid(),
@@ -32,8 +54,23 @@ namespace MyRecipe.Infrastructure.DataBase.Initializers
                 CreationDate = DateTime.UtcNow,
                 StatusId = 1 // Active
             };
-
             await context.Users.AddAsync(mockUser);
+
+            // 2. Fetch the Administrator Role ID we seeded in System Essentials
+            var adminRole = await EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(
+                context.Roles,
+                r => r.Name == AppRoles.Administrator
+            );
+
+            // 3. Link the user to the Administrator role via IdentityUserRole
+            if (adminRole != null)
+            {
+                await context.UserRoles.AddAsync(new IdentityUserRole<Guid>
+                {
+                    UserId = mockUser.Id,
+                    RoleId = adminRole.Id
+                });
+            }
 
             // Seed some mock recipes since the domain is MyRecipe!
             // (Assuming you have a Recipes DbSet and RecipeEntity configured)
