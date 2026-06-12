@@ -1,4 +1,5 @@
 using MyRecipe.Api.Extensions;
+using MyRecipe.Infrastructure.DataBase.Contexts;
 using MyRecipe.Infrastructure.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,5 +19,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+await app.Services.SeedDatabaseAsync();
 
 await app.RunAsync();
