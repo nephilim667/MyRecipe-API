@@ -6,4 +6,21 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="CommandInputs\" />
+    <Folder Include="CommandOutputs\" />
+    <Folder Include="UseCases\Authentication\Commands\Validators\" />
+    <Folder Include="UseCases\Authentication\Errors\" />
+    <Folder Include="UseCases\Authentication\Queries\Validators\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="MediatR" Version="14.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MyRecipe.Domain\MyRecipe.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,7 +1,9 @@
 <Solution>
+  <Folder Name="/Tests/">
+    <Project Path="MyRecipe.Tests/Application.Tests/Application.Tests.csproj" Id="ed4e5c95-18e5-4d79-8df0-a49a1b2e7676" />
+  </Folder>
   <Project Path="MyRecipe.Api/MyRecipe.Api.csproj" />
   <Project Path="MyRecipe.Application/MyRecipe.Application.csproj" />
   <Project Path="MyRecipe.Domain/MyRecipe.Domain.csproj" />
   <Project Path="MyRecipe.Infrastructure/MyRecipe.Infrastructure.csproj" />
-  <Project Path="MyRecipe.Libraries/MyRecipe.Libraries.csproj" />
 </Solution>
