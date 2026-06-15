@@ -1,5 +1,4 @@
 ﻿using Microsoft.OpenApi;
-using Microsoft.AspNetCore.OpenApi;
 
 namespace MyRecipe.Api.Extensions
 {

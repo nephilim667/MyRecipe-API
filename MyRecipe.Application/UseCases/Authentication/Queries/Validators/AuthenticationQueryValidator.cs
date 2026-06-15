@@ -22,7 +22,11 @@ namespace MyRecipe.Application.UseCases.Authentication.Queries.Validators
                 RuleFor(qry => qry.authenticationInput.Password)
                     .NotEmpty()
                     .WithMessage(AuthenticationErrors.PasswordRequired.Description)
-                    .WithErrorCode(AuthenticationErrors.PasswordRequired.Code);
+                    .WithErrorCode(AuthenticationErrors.PasswordRequired.Code)
+                    .Must(pwd => pwd.Length > 3)
+                    .WithMessage(AuthenticationErrors.PasswordTooShort.Description)
+                    .WithErrorCode(AuthenticationErrors.PasswordTooShort.Code);
+                
             });
         }
     }

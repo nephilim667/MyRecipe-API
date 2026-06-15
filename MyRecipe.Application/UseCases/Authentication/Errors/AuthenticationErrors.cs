@@ -3,10 +3,16 @@ using MyRecipe.Application.Results;
 
 namespace MyRecipe.Application.UseCases.Authentication.Errors
 {
-    public class AuthenticationErrors
+    public static class AuthenticationErrors
     {
+        public static readonly ErrorResult InvalidCredentials = new(
+            "Authentication credentials invalids",
+            ErrorType.Invalid,
+            "Invalid credentials",
+            "authentication-credentials-invalids");
+
         public static readonly ErrorResult QueryInputRequired = new(
-            "GetClaimReportByQueryInput required",
+            "AuthenticationQueryInput required",
             ErrorType.Error,
             "Authentication query input cannot be null.",
             "authentication-queryinput-required");
@@ -22,5 +28,11 @@ namespace MyRecipe.Application.UseCases.Authentication.Errors
             ErrorType.Error,
             "Password is required.",
             "authentication-password-required");
+
+        public static readonly ErrorResult PasswordTooShort = new(
+            "Password length too short",
+            ErrorType.Error,
+            "Password length must greather than 3.",
+            "authentication-password-too-short");
     }
 }

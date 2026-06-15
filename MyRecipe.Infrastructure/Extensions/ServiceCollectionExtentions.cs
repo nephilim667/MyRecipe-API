@@ -1,7 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+
+using MyRecipe.Application.Interfaces;
+using MyRecipe.Infrastructure.Services;
 using MyRecipe.Infrastructure.DataBase.Contexts;
+using MyRecipe.Infrastructure.DataBase.Entities;
 
 namespace MyRecipe.Infrastructure.Extensions
 {
@@ -19,7 +24,7 @@ namespace MyRecipe.Infrastructure.Extensions
             // Pre-compute the safe fallback name once
             var safeInMemoryDbName = !string.IsNullOrWhiteSpace(inMemoryDbName) ? inMemoryDbName : "MyRecipeSafeFallbackDb";
 
-            // Add infrastructure services based on the provider
+            // Add infrastructure DB services based on the provider
             services.AddDbContext<AppDbContext>(options =>
             {
                 switch (provider)
@@ -38,6 +43,18 @@ namespace MyRecipe.Infrastructure.Extensions
                 }
             });
 
+            // Add ASP.NET Core Identity backing configurations
+            services.AddIdentityCore<UserEntity>(options =>
+            {
+                options.Password.RequireDigit = true;
+                options.Password.RequiredLength = 12;
+            })
+            .AddRoles<IdentityRole<Guid>>()
+            .AddEntityFrameworkStores<AppDbContext>();
+
+            // Add infrastructure services
+            services.AddScoped<IJwtTokenService, JwtTokenService>();
+            services.AddScoped<IAuthenticationService, AuthenticationService>();
 
             return services;
         }

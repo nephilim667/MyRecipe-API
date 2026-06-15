@@ -1,7 +1,9 @@
 ﻿using MediatR;
-using MyRecipe.Application.Inputs.Queries.Authentication;
+
 using MyRecipe.Application.Interfaces;
+using MyRecipe.Application.Inputs.Queries.Authentication;
 using MyRecipe.Application.Outputs.Queries.Authentication;
+using MyRecipe.Application.UseCases.Authentication.Errors;
 
 namespace MyRecipe.Application.UseCases.Authentication.Queries
 {
@@ -16,7 +18,7 @@ namespace MyRecipe.Application.UseCases.Authentication.Queries
             var result = await _authenticationService.AuthenticateAsync(request.authenticationInput.UsernameOrEmail, request.authenticationInput.Password);
 
             if(result is null)
-                throw new UnauthorizedAccessException("Invalid credentials");
+                throw new UnauthorizedAccessException(AuthenticationErrors.InvalidCredentials.Description);
 
             return result;
         }
