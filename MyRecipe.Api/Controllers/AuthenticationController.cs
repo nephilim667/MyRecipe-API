@@ -9,17 +9,9 @@ using MyRecipe.Application.UseCases.Authentication.Queries;
 
 namespace MyRecipe.Api.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
-    public class AuthenticationController : ControllerBase
+    public class AuthenticationController(IMediator mediator, ILogger<AuthenticationController> logger) : BaseController(mediator, logger)
     {
-        private readonly IMediator _mediator;
-
-        public AuthenticationController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
-
         [HttpPost("login")]
         [Consumes(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -30,7 +22,7 @@ namespace MyRecipe.Api.Controllers
         {
             var result = await _mediator.Send(new AuthenticationQuery(input), cancellationToken);
 
-            return Ok(result);
+            return result.IsFailure ? HandleFailure(result) : Ok(result.Content);
         }
 
     }
