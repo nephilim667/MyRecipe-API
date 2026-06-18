@@ -17,6 +17,9 @@ builder.Services.AddMediatRService();
 // Custom infrastructure services
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
+// Custom authentication services
+builder.Services.AddJwtAuthentication(builder.Configuration);
+
 // Logging services
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
@@ -30,6 +33,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

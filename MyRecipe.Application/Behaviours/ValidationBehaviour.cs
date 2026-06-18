@@ -1,5 +1,3 @@
-﻿using System.Reflection;
-
 using MediatR;
 using FluentValidation;
 using FluentValidation.Results;
@@ -26,42 +24,34 @@ namespace MyRecipe.Application.Behaviours
 
             List<ValidationFailure> failures = [.. validationResults.SelectMany(r => r.Errors).Where(f => f is not null)];
 
-            if (failures.Count > 0)
+            if (failures.Count == 0)
+                return await next(cancellationToken);
+
+            _logger.LogWarning("Validation failed for {RequestType}. Errors: {ErrorCount}", typeof(TRequest).Name, failures.Count);
+
+            ErrorResult errorResult = CreateValidationError(failures);
+
+            if (AppResult.TryFailure<TResponse>(errorResult, out var failureResult))
+                return failureResult;
+
+            throw new ValidationException(failures);
+        }
+
+        private static ErrorResult CreateValidationError(IEnumerable<ValidationFailure> failures)
+        {
+            List<ValidationError> validationErrors = [.. failures.Select(f => new ValidationError
             {
-                _logger.LogWarning("Validation failed for {RequestType}. Errors: {ErrorCount}", typeof(TRequest).Name, failures.Count);
+                Identifier = f.PropertyName,
+                ErrorMessage = f.ErrorMessage,
+                ErrorCode = f.ErrorCode,
+            })];
 
-                if (typeof(AppResult).IsAssignableFrom(typeof(TResponse)))
-                {
-                    List<ValidationError> validationErrors = [..failures.Select(f => new ValidationError
-                {
-                    Identifier = f.PropertyName,
-                    ErrorMessage = f.ErrorMessage,
-                    ErrorCode = f.ErrorCode,
-                })];
-
-                    ErrorResult errorResult = new(
-                        title: "Operation validation have failed",
-                        type: ErrorType.Invalid,
-                        description: "One or more fields aren't respects validation rules",
-                        code: "validation-errors",
-                        validationErrors: validationErrors);
-
-                    MethodInfo? failureMethod = typeof(TResponse).GetMethod(nameof(AppResult.Failure), BindingFlags.Public | BindingFlags.Static, null, [typeof(ErrorResult)], null);
-
-                    if (failureMethod is not null)
-                    {
-                        var errorResponseInstance = failureMethod.Invoke(null, [errorResult]);
-                        return (TResponse)errorResponseInstance!;
-                    }
-
-                    _logger.LogError("Failed to find static failure method on {ResponseType}", typeof(TResponse).Name);
-                }
-
-                // Fallback to throwing if Reflection fails so the app doesn't silently freeze
-                throw new ValidationException(failures);
-            }
-
-            return await next(cancellationToken);
+            return new(
+                title: "Operation validation has failed",
+                type: ErrorType.Invalid,
+                description: "One or more fields do not respect validation rules",
+                code: "validation-errors",
+                validationErrors: validationErrors);
         }
     }
 }

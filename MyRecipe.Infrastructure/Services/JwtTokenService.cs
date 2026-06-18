@@ -44,9 +44,9 @@ namespace MyRecipe.Infrastructure.Services
                 }
             }
 
-            // 3. Grab secret keys out of appsettings.json
+            // 3. Grab secret keys out of configuration
             var secretKey = _configuration["JwtSettings:Secret"]
-                ?? "A_Super_Secret_Fallback_Key_That_Is_At_Least_32_Bytes_Long!";
+                ?? throw new InvalidOperationException("JwtSettings:Secret is required.");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

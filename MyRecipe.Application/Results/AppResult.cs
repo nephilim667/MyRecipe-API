@@ -1,20 +1,18 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace MyRecipe.Application.Results
 {
     public class AppResult
     {
-        public AppResult(bool isSuccess, ErrorResult? error = null, object content = null)
+        protected AppResult(bool isSuccess, ErrorResult? error)
         {
             if (isSuccess && error is not null || !isSuccess && error is null)
                 throw new ArgumentException("Invalid error", nameof(error));
 
             IsSuccess = isSuccess;
             Error = error;
-            Content = content;
         }
-
-        public object? Content { get; }
 
         [MemberNotNullWhen(false, nameof(Error))]
         public bool IsSuccess { get; }
@@ -27,21 +25,48 @@ namespace MyRecipe.Application.Results
         public static AppResult Success() => new(true, null);
         public static AppResult Failure(ErrorResult error) => new(false, error);
 
+        public static bool TryFailure<TResponse>(ErrorResult error, [NotNullWhen(true)] out TResponse? result)
+        {
+            if (typeof(TResponse) == typeof(AppResult))
+            {
+                result = (TResponse)(object)Failure(error);
+                return true;
+            }
+
+            if (!typeof(TResponse).IsGenericType || typeof(TResponse).GetGenericTypeDefinition() != typeof(AppResult<>))
+            {
+                result = default;
+                return false;
+            }
+
+            MethodInfo? failureMethod = typeof(TResponse).GetMethod(
+                nameof(Failure),
+                BindingFlags.Public | BindingFlags.Static,
+                null,
+                [typeof(ErrorResult)],
+                null);
+
+            if (failureMethod is null)
+            {
+                result = default;
+                return false;
+            }
+
+            result = (TResponse)failureMethod.Invoke(null, [error])!;
+            return true;
+        }
     }
 
-    public class AppResult<T>(bool isSuccess, ErrorResult? error = null, T? content = default) : AppResult(isSuccess, error)
+    public sealed class AppResult<T> : AppResult
     {
-        public new T? Content { get; } = content;
+        private AppResult(bool isSuccess, T? content, ErrorResult? error) : base(isSuccess, error)
+        {
+            Content = content;
+        }
 
-        [MemberNotNullWhen(false, nameof(Error))]
-        public new bool IsSuccess => base.IsSuccess;
+        public T? Content { get; }
 
-        [MemberNotNullWhen(true, nameof(Error))]
-        public new bool IsFailure => base.IsFailure;
-
-        public ErrorResult? Error => base.Error;
-
-        public static AppResult<T> Success(T result) => new(true, null, result);
-        public static new AppResult<T> Failure(ErrorResult error) => new(false, error, default);
+        public static AppResult<T> Success(T result) => new(true, result, null);
+        public static new AppResult<T> Failure(ErrorResult error) => new(false, default, error);
     }
 }

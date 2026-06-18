@@ -40,15 +40,17 @@ namespace Application.Tests.UseCases.Authentication
 
             // Assert
             result.Should().NotBeNull();
-            result.Token.Should().Be("mocked-jwt-token");
-            result.Username.Should().Be("sandbox_chef");
+            result.IsSuccess.Should().BeTrue();
+            result.Content.Should().NotBeNull();
+            result.Content!.Token.Should().Be("mocked-jwt-token");
+            result.Content.Username.Should().Be("sandbox_chef");
 
             // Asserting behavior: Check that the service was called exactly once
             await _authService.Received(1).AuthenticateAsync(input.UsernameOrEmail, input.Password);
         }
 
         [Fact]
-        public async Task Should_Throw_UnauthorizedAccessException_When_Credentials_Are_Invalid()
+        public async Task Should_Return_Failure_When_Credentials_Are_Invalid()
         {
             // Arrange
             var input = new AuthenticationQueryInput() { UsernameOrEmail = "imposter_chef", Password = "wrong-password" };
@@ -59,11 +61,13 @@ namespace Application.Tests.UseCases.Authentication
                         .Returns((AuthenticationResponse?)null);
 
             // Act
-            Func<Task> act = async () => await _handler.Handle(query, CancellationToken.None);
+            var result = await _handler.Handle(query, CancellationToken.None);
 
             // Assert
-            await act.Should().ThrowAsync<UnauthorizedAccessException>()
-                     .WithMessage(AuthenticationErrors.InvalidCredentials.Description);
+            result.Should().NotBeNull();
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be(AuthenticationErrors.InvalidCredentials);
+            result.Content.Should().BeNull();
         }
     }
 }
