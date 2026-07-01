@@ -1,9 +1,14 @@
-﻿using Microsoft.OpenApi;
+using Microsoft.OpenApi;
+using Scalar.AspNetCore;
 
 namespace MyRecipe.Api.Extensions
 {
     public static class OpenApiExtensions
     {
+        private const string SwaggerProvider = "swagger";
+        private const string ScalarProvider = "scalar";
+        private const string BothProvider = "both";
+
         /// <summary>
         /// Configures native OpenAPI generation with JWT security requirements.
         /// </summary>
@@ -40,17 +45,33 @@ namespace MyRecipe.Api.Extensions
         }
 
         /// <summary>
-        /// Maps the OpenAPI endpoints and configures the interactive Swagger UI.
+        /// Maps the OpenAPI endpoints and configures the selected interactive API documentation UI.
         /// </summary>
-        public static IApplicationBuilder UseOpenApiDocumentation(this WebApplication app)
+        public static IApplicationBuilder UseOpenApiDocumentation(this WebApplication app, IConfiguration configuration)
         {
-            app.MapOpenApi();
+            var provider = configuration["ApiDocumentation:Provider"]?.ToLowerInvariant().Trim() ?? SwaggerProvider;
+            var defaultRoute = provider is ScalarProvider or BothProvider ? "/scalar" : "/swagger";
 
-            app.UseSwaggerUI(options =>
+            app.MapOpenApi();
+            app.MapGet("/docs", () => Results.Redirect(defaultRoute));
+
+            if (provider is SwaggerProvider or BothProvider)
             {
-                options.SwaggerEndpoint("/openapi/v1.json", "MyRecipe API v1");
-                options.RoutePrefix = "swagger";
-            });
+                app.UseSwaggerUI(options =>
+                {
+                    options.SwaggerEndpoint("/openapi/v1.json", "MyRecipe API v1");
+                    options.RoutePrefix = "swagger";
+                });
+            }
+
+            if (provider is ScalarProvider or BothProvider)
+            {
+                app.MapScalarApiReference(options =>
+                {
+                    options.WithTitle("MyRecipe API");
+                    options.WithOpenApiRoutePattern("/openapi/{documentName}.json");
+                });
+            }
 
             return app;
         }
