@@ -1,6 +1,22 @@
-@MyRecipe.Api_HostAddress = http://localhost:5199
+@MyRecipe.Api_HostAddress = https://localhost:7123
 
-GET {{MyRecipe.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+### Register a New User
+POST {{MyRecipe.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "chef_john",
+  "email": "john@myrecipe.com",
+  "password": "SecurePassword123!"
+}
 
 ###
+
+### Login User
+POST {{MyRecipe.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@myrecipe.com",
+  "password": "SecurePassword123!"
+}
